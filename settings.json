@@ -1,0 +1,20 @@
+{
+  "canvas": {
+    "width": 800,
+    "height": 600,
+    "backgroundColor": "#87CEEB"
+  },
+  "character": {
+    "gravity": 0.75,
+    "maxFallSpeed": 15,
+    "initialJumpStrength": -5,
+    "maxJumpTime": 15,
+    "moveSpeed": 5,
+    "coyoteTime": 5,
+    "frameSpeed": 3,
+    "characterFrames": 9,
+    "frameImageName": "fox_walk",
+    "frameImageType": "png",
+    "fps": 60
+  }
+}

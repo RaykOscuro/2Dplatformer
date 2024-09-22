@@ -1,0 +1,9 @@
+{
+  "name": "platformer_test",
+  "main": "index.html",
+  "window": {
+    "width": 800,
+    "height": 600
+  },
+  "chromium-args": "--no-user-gesture-required"
+}
