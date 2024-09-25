@@ -1,5 +1,19 @@
 export class Platform {
-  constructor(x, y, width, height, solid, hazard) {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  solid: boolean;
+  hazard: boolean;
+
+  constructor(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    solid: boolean,
+    hazard: boolean
+  ) {
     this.x = x;
     this.y = y;
     this.width = width;
@@ -8,7 +22,7 @@ export class Platform {
     this.hazard = hazard;
   }
 
-  draw(ctx) {
+  draw(ctx: CanvasRenderingContext2D): void {
     if (this.hazard) {
       ctx.fillStyle = "rgba(255, 25, 25, 1)";
     } else if (this.solid) {

@@ -1,4 +1,8 @@
 {
+  "settings": {
+    "width": 1200,
+    "height": 600
+  },
   "character": {
     "x": 100,
     "y": 500,
@@ -16,11 +20,19 @@
     },
     {
       "x": 300,
-      "y": 50,
-      "width": 550,
-      "height": 50,
+      "y": 25,
+      "width": 600,
+      "height": 25,
       "isSolid": false,
       "isHazard": true
+    },
+    {
+      "x": 900,
+      "y": 50,
+      "width": 300,
+      "height": 50,
+      "isSolid": true,
+      "isHazard": false
     },
     {
       "x": 400,
@@ -40,10 +52,10 @@
     },
     {
       "x": 250,
-      "y": 250,
+      "y": 225,
       "width": 50,
-      "height": 50,
-      "isSolid": true,
+      "height": 25,
+      "isSolid": false,
       "isHazard": true
     },
     {
@@ -56,9 +68,9 @@
     },
     {
       "x": 800,
-      "y": 300,
+      "y": 275,
       "width": 50,
-      "height": 50,
+      "height": 25,
       "isSolid": false,
       "isHazard": true
     }
