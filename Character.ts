@@ -16,6 +16,7 @@ interface SettingsData {
   maxFallSpeed: number;
   frameSpeed: number;
   coyoteTime: number;
+  slideFactor: number;
 }
 
 interface Keys {
@@ -48,6 +49,7 @@ export class Character {
   coyoteCounter: number;
   frameIndex: number = 0;
   frameCounter: number = 0;
+  slideFactor: number;
 
   constructor(characterData: CharacterData, settingsData: SettingsData) {
     this.audioJump = new Audio("/sfx/jump.mp3");
@@ -59,8 +61,8 @@ export class Character {
     }
     this.xBase = characterData.x;
     this.yBase = characterData.y;
-    this.x = characterData.x;
-    this.y = characterData.y;
+    this.x = this.xBase;
+    this.y = this.yBase;
     this.hitbox = {
       left: characterData.x,
       right: characterData.x + characterData.width,
@@ -70,6 +72,7 @@ export class Character {
     this.width = characterData.width;
     this.height = characterData.height;
     this.coyoteCounter = this.settings.coyoteTime;
+    this.slideFactor = this.settings.slideFactor;
   }
 
   reset(): void {
@@ -99,7 +102,7 @@ export class Character {
     this.dy = 0;
   }
 
-  hitWall(wall: number, deltaTime: number): void {
+  hitWall(wall: number): void {
     this.x = wall;
     this.dx = 0;
   }
@@ -124,15 +127,21 @@ export class Character {
 
     // Horizontal movement
     if (keys["ArrowLeft"]) {
-      this.dx = -this.settings.moveSpeed;
+      this.dx = Math.max(
+        this.dx - this.settings.moveSpeed,
+        -this.settings.moveSpeed
+      ); // Limit horizontal speed
       this.facingLeft = true;
       this.frameCounter += deltaTime / 16.66667;
     } else if (keys["ArrowRight"]) {
-      this.dx = this.settings.moveSpeed;
+      this.dx = Math.min(
+        this.dx + this.settings.moveSpeed,
+        this.settings.moveSpeed
+      );
       this.facingLeft = false;
       this.frameCounter += deltaTime / 16.66667;
     } else {
-      this.dx = 0;
+      this.dx *= this.slideFactor;
       this.frameIndex = 0;
       this.frameCounter = 0;
     }
@@ -142,16 +151,20 @@ export class Character {
       this.frameCounter = 0; // Reset counter
     }
 
-    // Jump logic
+    // Initiate jump
     if (keys["Space"] && this.jumpReleased) {
       this.jumpReleased = false;
-      this.jumpCounter = 0;
       if (this.grounded || this.coyoteCounter > 0) {
+        this.jumpCounter = 0;
         this.dy = this.settings.initialJumpStrength;
         this.coyoteCounter = 0;
         this.grounded = false;
       } else if (this.canDoubleJump) {
-        this.dy = this.settings.initialJumpStrength;
+        this.jumpCounter = 0;
+        this.dy = Math.min(
+          this.dy + this.settings.initialJumpStrength / 2,
+          this.settings.initialJumpStrength
+        );
         this.canDoubleJump = false;
       }
     }
@@ -175,9 +188,10 @@ export class Character {
     }
 
     // Update position
-    this.x += (this.dx * deltaTime) / 16.66667;
-    this.y += (this.dy * deltaTime) / 16.66667;
-
+    if (deltaTime <= 200) {
+      this.x += (this.dx * deltaTime) / 16.66667;
+      this.y += (this.dy * deltaTime) / 16.66667;
+    }
     // Coyote time logic
     if (!this.grounded) {
       if (this.coyoteCounter > 0) {

@@ -1,4 +1,5 @@
 import { Character } from "./Character";
+import { Enemy } from "./Enemy";
 import { Platform } from "./Platform";
 import { checkCollision } from "./collision";
 
@@ -21,6 +22,8 @@ const settingsData = JSON.parse(
   fs.readFileSync("./settings.json", "utf-8")
 ) as any;
 
+const offsetThreshold = settingsData.canvas.offsetThreshold;
+
 // Set the canvas dimensions
 canvas.width = settingsData.canvas.width;
 canvas.height = settingsData.canvas.height;
@@ -41,14 +44,14 @@ platformsCtx.fillRect(0, 0, platformsCanvas.width, platformsCanvas.height);
 // Create the character and platforms
 const character = new Character(levelData.character, settingsData.character);
 const platforms = levelData.platforms.map(
-  (platform: any) =>
+  (platformData: any) =>
     new Platform(
-      platform.x,
-      canvas.height - platform.y,
-      platform.width,
-      platform.height,
-      platform.isSolid,
-      platform.isHazard
+      platformData.x,
+      canvas.height - platformData.y,
+      platformData.width,
+      platformData.height,
+      platformData.isSolid,
+      platformData.isHazard
     )
 );
 
@@ -69,21 +72,21 @@ window.addEventListener("keyup", (e: KeyboardEvent) => {
 });
 
 let offset = 0;
+const enemies: Enemy[] = [];
+enemies.push(new Enemy(platforms[2], 2));
+enemies.push(new Enemy(platforms[3], 2));
 
 function draw() {
   if (
-    character.x > canvas.width - settingsData.canvas.offsetThreshold - offset &&
+    character.x > canvas.width - offsetThreshold - offset &&
     character.dx > 0
   ) {
     offset = Math.max(
       canvas.width - platformsCanvas.width,
-      canvas.width - character.x - settingsData.canvas.offsetThreshold
+      canvas.width - character.x - offsetThreshold
     );
-  } else if (
-    character.x < settingsData.canvas.offsetThreshold - offset &&
-    character.dx < 0
-  ) {
-    offset = Math.min(0, settingsData.canvas.offsetThreshold - character.x);
+  } else if (character.x < offsetThreshold - offset && character.dx < 0) {
+    offset = Math.min(0, offsetThreshold - character.x);
   }
   if (!ctx) {
     throw new Error("Unable to get 2D context for the canvas.");
@@ -93,7 +96,11 @@ function draw() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(platformsCanvas, offset, 0);
   ctx.save();
+  // console.log(character.x, character.y, offset);
   character.draw(ctx, offset);
+  for (const enemy of enemies) {
+    enemy.draw(ctx, offset);
+  }
   ctx.restore();
 }
 
@@ -106,11 +113,53 @@ function gameLoop(timestamp: number) {
     console.log(deltaTime);
   }
   lastTime = timestamp ? timestamp : 0;
-
   character.update(keys, platformsCanvas, deltaTime);
-
-  if (!checkCollision(character, platforms, deltaTime)) {
-    offset = 0;
+  for (const [index, enemy] of enemies.entries()) {
+    enemy.move(deltaTime);
+    const enemyCollisions = checkCollision(character, enemy, deltaTime);
+    if (enemyCollisions.top) {
+      character.dy *= -0.5;
+      enemies.splice(index, 1);
+    } else if (
+      enemyCollisions.bottom ||
+      enemyCollisions.left ||
+      enemyCollisions.right
+    ) {
+      console.log("Died");
+      character.reset();
+      offset = 0;
+      break;
+    }
+  }
+  for (const platform of platforms) {
+    const collisions = checkCollision(character, platform, deltaTime);
+    if (
+      platform.hazard &&
+      (collisions.top ||
+        collisions.bottom ||
+        collisions.left ||
+        collisions.right)
+    ) {
+      // console.log(
+      //   "Died",
+      //   collisions,
+      //   platform.x,
+      //   platform.y,
+      //   character.x,
+      //   character.y
+      // );
+      character.reset();
+      offset = 0;
+      break;
+    } else if (collisions.top) {
+      character.land(platform.y);
+    } else if (platform.solid && collisions.bottom) {
+      character.bonk(platform.y + platform.height);
+    } else if (platform.solid && collisions.left) {
+      character.hitWall(platform.x - character.width);
+    } else if (platform.solid && collisions.right) {
+      character.hitWall(platform.x + platform.width);
+    }
   }
   draw();
 

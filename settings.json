@@ -16,6 +16,7 @@
     "characterFrames": 9,
     "frameImageName": "fox_walk",
     "frameImageType": "png",
-    "fps": 60
+    "fps": 60,
+    "slideFactor": 0.65
   }
 }
