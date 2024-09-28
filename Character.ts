@@ -50,6 +50,8 @@ export class Character {
   frameIndex: number = 0;
   frameCounter: number = 0;
   slideFactor: number;
+  momentumFactor: number = 0.99;
+  conveyorSpeed: number = 0;
 
   constructor(characterData: CharacterData, settingsData: SettingsData) {
     this.audioJump = new Audio("/sfx/jump.mp3");
@@ -129,19 +131,19 @@ export class Character {
     if (keys["ArrowLeft"]) {
       this.dx = Math.max(
         this.dx - this.settings.moveSpeed,
-        -this.settings.moveSpeed
+        Math.min(-this.settings.moveSpeed, this.dx*=this.momentumFactor * deltaTime)
       ); // Limit horizontal speed
       this.facingLeft = true;
-      this.frameCounter += deltaTime / 16.66667;
+      this.frameCounter += deltaTime;
     } else if (keys["ArrowRight"]) {
       this.dx = Math.min(
         this.dx + this.settings.moveSpeed,
-        this.settings.moveSpeed
+        Math.max(this.settings.moveSpeed, this.dx*=this.momentumFactor * deltaTime)
       );
       this.facingLeft = false;
-      this.frameCounter += deltaTime / 16.66667;
+      this.frameCounter += deltaTime;
     } else {
-      this.dx *= this.slideFactor;
+      this.dx *= this.slideFactor * deltaTime;
       this.frameIndex = 0;
       this.frameCounter = 0;
     }
@@ -175,11 +177,11 @@ export class Character {
       !this.grounded &&
       this.jumpCounter < this.settings.maxJumpTime
     ) {
-      this.dy += (this.settings.gravity * 0.1 * deltaTime) / 16.66667;
-      this.jumpCounter += deltaTime / 16.66667;
+      this.dy += (this.settings.gravity * 0.1 * deltaTime);
+      this.jumpCounter += deltaTime;
     } else {
       // Apply gravity
-      this.dy += (this.settings.gravity * deltaTime) / 16.66667;
+      this.dy += (this.settings.gravity * deltaTime);
     }
 
     // Limit fall speed
@@ -188,14 +190,14 @@ export class Character {
     }
 
     // Update position
-    if (deltaTime <= 200) {
-      this.x += (this.dx * deltaTime) / 16.66667;
-      this.y += (this.dy * deltaTime) / 16.66667;
+    if (deltaTime <= 12) {
+      this.x += (this.dx * deltaTime);
+      this.y += (this.dy * deltaTime);
     }
     // Coyote time logic
     if (!this.grounded) {
       if (this.coyoteCounter > 0) {
-        this.coyoteCounter -= deltaTime / 16.66667;
+        this.coyoteCounter -= deltaTime;
       } else {
         this.coyoteCounter = 0;
       }

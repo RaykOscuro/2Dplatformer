@@ -26,7 +26,8 @@ interface Collisions {
 export function checkCollision(
   character: Character,
   object: Object,
-  deltaTime: number
+  deltaTime: number,
+  current: boolean = false
 ): Collisions {
   const collisions = {
     top: false,
@@ -46,13 +47,16 @@ export function checkCollision(
   const withinPlatformHeight =
     character.y < objectBottom && character.y + character.height > objectTop;
 
+  if (current && withinPlatformHeight && withinPlatformWidth) {
+    collisions["top"] = true;
+    return collisions;
+  }
+
   // Collision from above
   if (
     withinPlatformWidth &&
     character.y + character.height >= objectTop &&
-    character.y +
-      character.height -
-      (character.dy * deltaTime * 1.0001) / 16.66667 <=
+    character.y + character.height - character.dy * deltaTime * 1.0001 <=
       objectTop
   ) {
     collisions["top"] = true;
@@ -62,7 +66,7 @@ export function checkCollision(
   if (
     withinPlatformWidth &&
     character.y < objectBottom &&
-    character.y - (character.dy * deltaTime * 1.0001) / 16.66667 >= objectBottom
+    character.y - character.dy * deltaTime * 1.0001 >= objectBottom
   ) {
     collisions["bottom"] = true;
   }
@@ -74,9 +78,7 @@ export function checkCollision(
     character.x < objectRight
   ) {
     if (
-      character.x +
-        character.width -
-        (character.dx * deltaTime * 1.0001) / 16.66667 <=
+      character.x + character.width - character.dx * deltaTime * 1.0001 <=
         objectLeft ||
       object.hazard
     ) {
@@ -85,8 +87,7 @@ export function checkCollision(
     }
 
     if (
-      character.x - (character.dx * deltaTime * 1.0001) / 16.66667 >=
-        objectRight ||
+      character.x - character.dx * deltaTime * 1.0001 >= objectRight ||
       object.hazard
     ) {
       // console.log("right");

@@ -1,7 +1,10 @@
 import { Character } from "./Character";
+import { Conveyor } from "./Conveyor";
 import { Enemy } from "./Enemy";
 import { Platform } from "./Platform";
+import { Spring } from "./Spring";
 import { checkCollision } from "./collision";
+import { GameObject } from "./GameObject";
 
 // Importing Node's 'fs' module (only works if the environment supports Node.js APIs)
 import fs from "fs";
@@ -72,20 +75,34 @@ window.addEventListener("keyup", (e: KeyboardEvent) => {
 });
 
 let offset = 0;
-const enemies: Enemy[] = [];
-enemies.push(new Enemy(platforms[2], 2));
-enemies.push(new Enemy(platforms[3], 2));
+let gameObjects: GameObject[] = [];
+let deadEnemies: GameObject[] = [];
+
+gameObjects.push(new Spring(900, 534, 100, 16));
+gameObjects.push(new Conveyor(450, 434, 100, 16, 1, 4));
+gameObjects.push(new Enemy(platforms[2], 2));
+gameObjects.push(new Enemy(platforms[3], 2));
+
+function death() {
+  character.reset();
+  gameObjects = gameObjects.concat(deadEnemies);
+  deadEnemies = [];
+  offset = 0;
+}
 
 function draw() {
   if (
     character.x > canvas.width - offsetThreshold - offset &&
-    character.dx > 0
+    character.dx + character.conveyorSpeed > 0
   ) {
     offset = Math.max(
       canvas.width - platformsCanvas.width,
       canvas.width - character.x - offsetThreshold
     );
-  } else if (character.x < offsetThreshold - offset && character.dx < 0) {
+  } else if (
+    character.x < offsetThreshold - offset &&
+    character.dx + character.conveyorSpeed < 0
+  ) {
     offset = Math.min(0, offsetThreshold - character.x);
   }
   if (!ctx) {
@@ -98,8 +115,8 @@ function draw() {
   ctx.save();
   // console.log(character.x, character.y, offset);
   character.draw(ctx, offset);
-  for (const enemy of enemies) {
-    enemy.draw(ctx, offset);
+  for (const object of gameObjects) {
+    object.draw(ctx, offset);
   }
   ctx.restore();
 }
@@ -107,28 +124,51 @@ function draw() {
 let lastTime = 0;
 
 function gameLoop(timestamp: number) {
-  const deltaTime = timestamp && lastTime !== 0 ? timestamp - lastTime : 0;
+  const deltaTime =
+    timestamp && lastTime !== 0 ? (timestamp - lastTime) / 16.66667 : 0;
+
   if (!lastTime) {
     console.log(lastTime);
     console.log(deltaTime);
   }
   lastTime = timestamp ? timestamp : 0;
   character.update(keys, platformsCanvas, deltaTime);
-  for (const [index, enemy] of enemies.entries()) {
-    enemy.move(deltaTime);
-    const enemyCollisions = checkCollision(character, enemy, deltaTime);
-    if (enemyCollisions.top) {
-      character.dy *= -0.5;
-      enemies.splice(index, 1);
-    } else if (
-      enemyCollisions.bottom ||
-      enemyCollisions.left ||
-      enemyCollisions.right
-    ) {
-      console.log("Died");
-      character.reset();
-      offset = 0;
-      break;
+
+  for (const [index, gameObject] of gameObjects.entries()) {
+    if (gameObject instanceof Enemy) {
+      gameObject.move(deltaTime);
+      const enemyCollisions = checkCollision(character, gameObject, deltaTime);
+      if (enemyCollisions.top) {
+        character.dy *= -0.5;
+        deadEnemies.push(gameObjects.splice(index, 1)[0]);
+      } else if (
+        enemyCollisions.bottom ||
+        enemyCollisions.left ||
+        enemyCollisions.right
+      ) {
+        death();
+        break;
+      }
+    } else if (gameObject instanceof Conveyor) {
+      if (checkCollision(character, gameObject, deltaTime, true).top) {
+        character.x += gameObject.speed * deltaTime * gameObject.direction;
+        character.conveyorSpeed = gameObject.speed * gameObject.direction;
+      } else if (character.conveyorSpeed) {
+        character.conveyorSpeed = 0;
+        if (character.dx / gameObject.direction > 0) {
+          character.dx += gameObject.speed * gameObject.direction;
+        } else {
+          character.dx /= 2;
+        }
+      }
+    } else if (gameObject instanceof Spring) {
+      if (
+        character.dy > 0 &&
+        checkCollision(character, gameObject, deltaTime).top
+      ) {
+        character.dy *= gameObject.bounceFactor;
+        character.canDoubleJump = true;
+      }
     }
   }
   for (const platform of platforms) {
@@ -140,16 +180,7 @@ function gameLoop(timestamp: number) {
         collisions.left ||
         collisions.right)
     ) {
-      // console.log(
-      //   "Died",
-      //   collisions,
-      //   platform.x,
-      //   platform.y,
-      //   character.x,
-      //   character.y
-      // );
-      character.reset();
-      offset = 0;
+      death();
       break;
     } else if (collisions.top) {
       character.land(platform.y);
