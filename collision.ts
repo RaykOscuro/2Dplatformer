@@ -1,13 +1,12 @@
-interface Character {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+import { CharacterData } from "./Character";
+
+interface Character extends CharacterData {
   dx: number;
   dy: number;
+  settings: any;
 }
 
-interface Object {
+interface gameObject {
   x: number;
   y: number;
   width: number;
@@ -25,7 +24,7 @@ interface Collisions {
 
 export function checkCollision(
   character: Character,
-  object: Object,
+  gameObject: gameObject,
   deltaTime: number,
   current: boolean = false
 ): Collisions {
@@ -36,25 +35,25 @@ export function checkCollision(
     right: false,
   };
 
-  const objectTop = object.y;
-  const objectBottom = object.y + object.height;
-  const objectLeft = object.x;
-  const objectRight = object.x + object.width;
+  const objectTop = gameObject.y;
+  const objectBottom = gameObject.y + gameObject.height;
+  const objectLeft = gameObject.x;
+  const objectRight = gameObject.x + gameObject.width;
 
-  const withinPlatformWidth =
+  const withinObjectWidth =
     character.x < objectRight && character.x + character.width > objectLeft;
 
-  const withinPlatformHeight =
+  const withinObjectHeight =
     character.y < objectBottom && character.y + character.height > objectTop;
 
-  if (current && withinPlatformHeight && withinPlatformWidth) {
+  if (current && withinObjectHeight && withinObjectWidth) {
     collisions["top"] = true;
     return collisions;
   }
 
   // Collision from above
   if (
-    withinPlatformWidth &&
+    withinObjectWidth &&
     character.y + character.height >= objectTop &&
     character.y + character.height - character.dy * deltaTime * 1.0001 <=
       objectTop
@@ -64,7 +63,7 @@ export function checkCollision(
 
   // Collision from below
   if (
-    withinPlatformWidth &&
+    withinObjectWidth &&
     character.y < objectBottom &&
     character.y - character.dy * deltaTime * 1.0001 >= objectBottom
   ) {
@@ -73,14 +72,14 @@ export function checkCollision(
 
   // Collision from the left/right side
   if (
-    withinPlatformHeight &&
+    withinObjectHeight &&
     character.x + character.width > objectLeft &&
     character.x < objectRight
   ) {
     if (
       character.x + character.width - character.dx * deltaTime * 1.0001 <=
         objectLeft ||
-      object.hazard
+      gameObject.hazard
     ) {
       // console.log("left");
       collisions["left"] = true;
@@ -88,7 +87,7 @@ export function checkCollision(
 
     if (
       character.x - character.dx * deltaTime * 1.0001 >= objectRight ||
-      object.hazard
+      gameObject.hazard
     ) {
       // console.log("right");
       collisions["right"] = true;
@@ -96,9 +95,10 @@ export function checkCollision(
   }
 
   if (
+    
     (collisions.left || collisions.right) &&
     character.y + character.height > objectTop &&
-    character.y + character.height <= objectTop + character.height * 0.1
+    character.y + character.height <= objectTop + character.settings.ledgeClimb
   ) {
     // If the character is in the top section, move them to the top of the platform
     collisions["top"] = true;

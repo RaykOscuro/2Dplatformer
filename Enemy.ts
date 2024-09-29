@@ -3,6 +3,7 @@ import { Platform } from "./Platform";
 
 export class Enemy extends GameObject {
   speed: number;
+  bounceFactor: number = -0.5;
   direction: number;
   platform: Platform;
 

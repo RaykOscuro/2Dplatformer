@@ -132,6 +132,7 @@ function gameLoop(timestamp: number) {
     console.log(deltaTime);
   }
   lastTime = timestamp ? timestamp : 0;
+  // console.log(character.bufferJump);
   character.update(keys, platformsCanvas, deltaTime);
 
   for (const [index, gameObject] of gameObjects.entries()) {
@@ -139,7 +140,7 @@ function gameLoop(timestamp: number) {
       gameObject.move(deltaTime);
       const enemyCollisions = checkCollision(character, gameObject, deltaTime);
       if (enemyCollisions.top) {
-        character.dy *= -0.5;
+        character.dy *= gameObject.bounceFactor;
         deadEnemies.push(gameObjects.splice(index, 1)[0]);
       } else if (
         enemyCollisions.bottom ||

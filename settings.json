@@ -17,6 +17,8 @@
     "frameImageName": "fox_walk",
     "frameImageType": "png",
     "fps": 60,
-    "slideFactor": 0.65
+    "slideFactor": 0.65,
+    "bufferFrames": 8,
+    "ledgeClimb": 5
   }
 }
