@@ -5,6 +5,7 @@ export class GameObject {
   height: number;
   solid: boolean;
   hazard: boolean;
+  background: boolean = false;
 
   constructor(
     x: number,
@@ -12,7 +13,8 @@ export class GameObject {
     width: number,
     height: number,
     solid: boolean,
-    hazard: boolean
+    hazard: boolean,
+    background: boolean = false
   ) {
     this.x = x;
     this.y = y;
@@ -20,6 +22,7 @@ export class GameObject {
     this.height = height;
     this.solid = solid;
     this.hazard = hazard;
+    this.background = background;
   }
 
   // Common draw method

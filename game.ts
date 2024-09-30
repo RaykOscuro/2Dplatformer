@@ -5,6 +5,7 @@ import { Platform } from "./Platform";
 import { Spring } from "./Spring";
 import { checkCollision } from "./collision";
 import { GameObject } from "./GameObject";
+// import { settingsData, levelData } from "./settingsProvider"; // for web version
 
 // Importing Node's 'fs' module (only works if the environment supports Node.js APIs)
 import fs from "fs";
@@ -32,17 +33,16 @@ canvas.width = settingsData.canvas.width;
 canvas.height = settingsData.canvas.height;
 
 // Create the platforms canvas and context
-const platformsCanvas = document.createElement("canvas") as HTMLCanvasElement;
-platformsCanvas.width = levelData.settings.width;
-platformsCanvas.height = canvas.height;
-const platformsCtx = platformsCanvas.getContext("2d");
-if (!platformsCtx) {
-  throw new Error("Unable to get 2D context for the platforms canvas.");
+const gameCanvases: HTMLCanvasElement[] = [
+  document.createElement("canvas") as HTMLCanvasElement,
+  document.createElement("canvas") as HTMLCanvasElement,
+];
+const gameContexts: CanvasRenderingContext2D[] = [];
+for (const currentCanvas of gameCanvases) {
+  currentCanvas.width = levelData.settings.width;
+  currentCanvas.height = canvas.height;
+  gameContexts.push(currentCanvas.getContext("2d") as CanvasRenderingContext2D);
 }
-
-// Draw the platforms on the platforms canvas
-platformsCtx.fillStyle = settingsData.canvas.backgroundColor;
-platformsCtx.fillRect(0, 0, platformsCanvas.width, platformsCanvas.height);
 
 // Create the character and platforms
 const character = new Character(levelData.character, settingsData.character);
@@ -58,7 +58,14 @@ const platforms = levelData.platforms.map(
     )
 );
 
-platforms.forEach((platform: Platform) => platform.draw(platformsCtx));
+// Draw the platforms on the platform canvas
+platforms.forEach((platform: Platform) => platform.draw(gameContexts[0]));
+
+// Draw the background elements on the background canvas
+gameContexts[1].fillStyle = "rgba(100, 150, 100, 0.3)";
+levelData.backgroundElements.forEach((element: any) => {
+  gameContexts[1].fillRect(element.x, element.y, element.width, element.height);
+});
 
 let keys: { [key: string]: boolean } = {};
 
@@ -96,7 +103,7 @@ function draw() {
     character.dx + character.conveyorSpeed > 0
   ) {
     offset = Math.max(
-      canvas.width - platformsCanvas.width,
+      canvas.width - gameCanvases[0].width,
       canvas.width - character.x - offsetThreshold
     );
   } else if (
@@ -111,7 +118,8 @@ function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = settingsData.canvas.backgroundColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(platformsCanvas, offset, 0);
+  ctx.drawImage(gameCanvases[1], offset / 2, 0);
+  ctx.drawImage(gameCanvases[0], offset, 0);
   ctx.save();
   // console.log(character.x, character.y, offset);
   character.draw(ctx, offset);
@@ -133,7 +141,7 @@ function gameLoop(timestamp: number) {
   }
   lastTime = timestamp ? timestamp : 0;
   // console.log(character.bufferJump);
-  character.update(keys, platformsCanvas, deltaTime);
+  character.update(keys, gameCanvases[0], deltaTime);
 
   for (const [index, gameObject] of gameObjects.entries()) {
     if (gameObject instanceof Enemy) {

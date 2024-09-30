@@ -74,5 +74,49 @@
       "isSolid": false,
       "isHazard": true
     }
+  ],
+  "backgroundElements": [
+    {
+      "x": 0,
+      "y": 0,
+      "width": 25,
+      "height": 600
+    },
+    {
+      "x": 200,
+      "y": 0,
+      "width": 25,
+      "height": 700
+    },
+    {
+      "x": 400,
+      "y": 0,
+      "width": 25,
+      "height": 600
+    },
+    {
+      "x": 600,
+      "y": 0,
+      "width": 25,
+      "height": 700
+    },
+    {
+      "x": 800,
+      "y": 0,
+      "width": 25,
+      "height": 600
+    },
+    {
+      "x": 1000,
+      "y": 0,
+      "width": 25,
+      "height": 700
+    },
+    {
+      "x": 1200,
+      "y": 0,
+      "width": 25,
+      "height": 600
+    }
   ]
 }
