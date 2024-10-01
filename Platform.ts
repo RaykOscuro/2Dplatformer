@@ -7,9 +7,10 @@ export class Platform extends GameObject {
     width: number,
     height: number,
     solid: boolean,
-    hazard: boolean
+    hazard: boolean,
+    objectImage : HTMLImageElement | null = null
   ) {
-    super(x, y, width, height, solid, hazard);
+    super(x, y, width, height, solid, hazard, false, objectImage);
   }
 
 }

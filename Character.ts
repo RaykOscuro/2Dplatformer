@@ -114,6 +114,7 @@ export class Character {
 
   draw(ctx: CanvasRenderingContext2D, offset: number): void {
     ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
     ctx.save();
     if (this.facingLeft) {
       ctx.translate(this.x + this.width + offset, this.y);

@@ -44,6 +44,13 @@ for (const currentCanvas of gameCanvases) {
   gameContexts.push(currentCanvas.getContext("2d") as CanvasRenderingContext2D);
 }
 
+const spikeImage = new Image();
+const snekImage = new Image();
+const springImage = new Image();
+spikeImage.src = "images/spike.png";
+snekImage.src = "images/snek.png";
+springImage.src = "images/spring.png";
+
 // Create the character and platforms
 const character = new Character(levelData.character, settingsData.character);
 const platforms = levelData.platforms.map(
@@ -54,12 +61,10 @@ const platforms = levelData.platforms.map(
       platformData.width,
       platformData.height,
       platformData.isSolid,
-      platformData.isHazard
+      platformData.isHazard,
+      spikeImage
     )
 );
-
-// Draw the platforms on the platform canvas
-platforms.forEach((platform: Platform) => platform.draw(gameContexts[0]));
 
 // Draw the background elements on the background canvas
 gameContexts[1].fillStyle = "rgba(100, 150, 100, 0.3)";
@@ -85,10 +90,10 @@ let offset = 0;
 let gameObjects: GameObject[] = [];
 let deadEnemies: GameObject[] = [];
 
-gameObjects.push(new Spring(900, 534, 100, 16));
+gameObjects.push(new Spring(900, 534, 100, 16, -1, springImage));
 gameObjects.push(new Conveyor(450, 434, 100, 16, 1, 4));
-gameObjects.push(new Enemy(platforms[2], 2));
-gameObjects.push(new Enemy(platforms[3], 2));
+gameObjects.push(new Enemy(platforms[2], 2, snekImage));
+gameObjects.push(new Enemy(platforms[3], 2, snekImage));
 
 function death() {
   character.reset();
@@ -125,6 +130,7 @@ function draw() {
   character.draw(ctx, offset);
   for (const object of gameObjects) {
     object.draw(ctx, offset);
+    // console.log(object.objectImage);
   }
   ctx.restore();
 }
@@ -206,13 +212,22 @@ function gameLoop(timestamp: number) {
   requestAnimationFrame(gameLoop);
 }
 
+const imagesToPreload = [
+  ...character.images,
+  spikeImage,
+  snekImage,
+  springImage,
+];
+
 // Start the game loop after preloading images
 Promise.all(
-  character.images.map((img: HTMLImageElement) => {
+  imagesToPreload.map((img: HTMLImageElement) => {
     return new Promise<void>((resolve) => {
       img.onload = () => resolve();
     });
   })
 ).then(() => {
+  // Draw the platforms on the platform canvas
+  platforms.forEach((platform: Platform) => platform.draw(gameContexts[0]));
   gameLoop(0);
 });
